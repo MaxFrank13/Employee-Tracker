@@ -11,11 +11,23 @@ const addDpt = {
     name: 'dpt'
 }
 
-const addRole = {
-    type: 'input',
-    message: `What's the name of the new role?`,
-    name: 'role'
-}
+const addRole = [
+    {
+        type: 'input',
+        message: `What's the name of the new role?`,
+        name: 'role'
+    },
+    {
+        type: 'input',
+        message: `What's the salary of the new role?`,
+        name: 'salary'
+    },
+    {
+        type: 'input',
+        message: `What department is the role part of?`,
+        name: 'dpt'
+    },
+]
 
 const addEmployee = [
     {
