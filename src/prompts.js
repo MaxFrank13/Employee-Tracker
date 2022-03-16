@@ -23,8 +23,9 @@ const addRole = [
         name: 'salary'
     },
     {
-        type: 'input',
+        type: 'list',
         message: `What department is the role part of?`,
+        choices: ["Legal", "Finance", "Marketing", "Engineering"],
         name: 'dpt'
     },
 ]

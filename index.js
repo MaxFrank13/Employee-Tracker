@@ -35,13 +35,57 @@ const promptLoop = (input) => {
             break;
         case "Add Employee":
             // retrieve array of managers and assign it to 'choices' at index 3 of addEmployee
+            db.promise().query(`SELECT * FROM employee WHERE manager_id`)
+                .then( ([data]) => {
+                    const managerIds = data.reduce((prev, next) => prev.concat(next.manager_id), []);
+                    db.promise().query(`SELECT * FROM employee WHERE id in (?, ?, ?, ?)`, managerIds)
+                    .then(([managers]) => {
+                        const managerNames = managers.map(employee => {
+                            return `${employee.first_name} ${employee.last_name}`;
+                        })
+                        managerNames.push('N/A');
+                        addEmployee[3].choices = managerNames;
+                    })
+                    .catch(console.log);
+                })
+                .catch(console.log);
 
+            db.promise().query(`SELECT title FROM role`)
+                .then(([roles]) => {
+                    const rolesArray = roles.reduce((prev, next) => prev.concat(Object.values(next)), []);
+                    addEmployee[2].choices = rolesArray;
+                })
+                .catch(console.log);
             inquirer
                 .prompt(addEmployee)
                 .then(({ firstName, lastName, role, manager }) => {
-                    // INSERT INTO employee table
-                    init();
+                    let roleId;
+                    let mngId;
+                    let mngFName;
+                    if (manager !== "N/A") {
+                        mngFName = manager.split(' ')[0];
+                        db.promise().query(`SELECT * FROM employee WHERE first_name = (?)`, mngFName)
+                        .then(([data]) => {
+                            mngId = data[0].id;
+                        })
+                        .catch(console.log);
+                    } else {
+                        mngId = null;
+                    }
+                    db.promise().query(`SELECT * FROM role WHERE title = (?)`, role)
+                    .then(([data]) => {
+                        roleId = data[0].id;
+                        const values = [firstName, lastName, roleId, mngId];
+                        db.promise().query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`, values)
+                        .then(() => {
+                            console.log(`\n Added ${firstName} ${lastName} to employee table`);
+                            init();
+                        })
+                        .catch(console.log);
+                    })
+                    .catch(console.log);
                 })
+                .catch(console.log);
             break;
         case "Update Employee Role":
             db.promise().query(`SELECT CONCAT(employee.first_name, " ", employee.last_name) FROM employee`)
@@ -62,20 +106,25 @@ const promptLoop = (input) => {
                                         .then(() => {
                                             console.log("Employee role has been updated");
                                         })
-                                        .catch(console.log)
-          
-                            init();
+                                        .catch(console.log);
+                                init();
+                                })
+                                .catch(console.log); 
                         })
                         .catch(console.log);
                 })
-                .catch(console.log)
-            });
+                .catch(console.log);
             break;
         case "View All Roles":
             sql = "SELECT role.id AS id, role.title as title, department.name AS department, role.salary AS salary FROM role JOIN department ON role.department_id = department.id ORDER BY id";
             getTable(sql);
             break;
         case "Add Role":
+            db.promise().query("SELECT name FROM department")
+                .then(([dpts]) => {
+                    const dptsArray = dpts.reduce((prev, next) => prev.concat(Object.values(next)), []);
+                    addRole[2].choices = dptsArray;
+                })
             inquirer
                 .prompt(addRole)
                 .then(({ role, salary, dpt }) => {
@@ -90,7 +139,8 @@ const promptLoop = (input) => {
                                 })
                                 .catch(console.log)
                             init();
-                        });
+                        })
+                        .catch(console.log);
                 })
                 .catch(err => console.error(err));
             break;
@@ -119,7 +169,7 @@ const promptLoop = (input) => {
 const getTable = (sqlString) => {
     db.promise().query(sqlString)
         .then( ([data]) => {
-            console.log(`\n`);
+            console.log('\n----------\n')
             console.table(data);
         })
         .catch(console.log)
