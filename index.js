@@ -20,6 +20,7 @@ const db = mysql.createConnection(
 );
 
 const init = () => {
+    console.log(process)
     inquirer
         .prompt(main)
         .then(({main}) => promptLoop(main))
@@ -30,7 +31,7 @@ const init = () => {
 const promptLoop = (input) => {
     switch(input) {
         case "View All Employees":
-            sql = "SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, role.title AS title, department.name AS department,role.salary AS salary, employee.manager_id AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id";
+            sql = "SELECT e.id AS id, e.first_name AS first_name, e.last_name AS last_name, role.title AS title, department.name AS department, role.salary AS salary, CONCAT(m.first_name, ' ', m.last_name) AS manager FROM employee e LEFT JOIN role ON e.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee m ON e.manager_id = m.id";
             getTable(sql);
             break;
         case "Add Employee":
@@ -171,12 +172,12 @@ const getTable = (sqlString) => {
         .then( ([data]) => {
             console.log('\n----------\n')
             console.table(data);
+            inquirer
+                .prompt(main)
+                .then(({main}) => promptLoop(main))
+                .catch(err => console.error(err));
         })
         .catch(console.log)
-    inquirer
-        .prompt(main)
-        .then(({main}) => promptLoop(main))
-        .catch(err => console.error(err));
 };
 
 init();
