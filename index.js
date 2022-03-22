@@ -20,7 +20,6 @@ const db = mysql.createConnection(
 );
 
 const init = () => {
-    console.log(process)
     inquirer
         .prompt(main)
         .then(({main}) => promptLoop(main))
